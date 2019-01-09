@@ -71,9 +71,14 @@ try:
     while 1:
         data = read_serial.readline()  # Data from serial separate by newline character
         data = data.strip()            # Remove newline character of Arduino IDE
-        data = data.decode("utf-8")
-        if not(data.isdigit()):
-            if data == 'Pause':	       # If signal is F meaning that patient is fatigue
+        data = data.decode("utf-8", "backslashreplace")
+        signals = data.split()
+        if (len(data) > 24) or (len(signals) < 3):
+            print("Garbage line ignored")
+            continue
+        csvdata = signals[0] + ',' + signals[1] + ',' + signals[2]
+        if not(signals[0].isdigit()):
+            if data == 'Pause':
                 state = 'PAUSE'
                 print(state)
                 file_signal.close()
@@ -85,9 +90,7 @@ try:
 
         if state == "RUN":
             file_signal.write(datetime.now().strftime("%H:%M:%S.%f") + ",")    # Record time corresponding to the signal
-            signals = data.split()
-            csvdata = signals[0] + ',' + signals[1] + ',' + signals[2]
-            file_signal.write(data)
+            file_signal.write(csvdata)
             print(str(datetime.now().hour) + ":" + str(datetime.now().minute) + ":" + str(datetime.now().second) + "   " + csvdata + " " + "RUN")
             #print(datetime.now().minute+data+'  '+state)
             file_signal.write("\n")
